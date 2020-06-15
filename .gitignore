@@ -1,0 +1,20 @@
+.DS_Store
+/vue3.0-demo-vite/node_modules
+/vue3.0-demo/node_modules
+/vue3.0-demo-cli/node_modules
+/vue3.0-demo-vite-service/node_modules
+/dist
+
+# local env files
+.env.local
+.env.*.local
+
+# Log files
+yarn-debug.log*
+yarn-error.log*
+
+# Editor directories and files
+.idea
+*.iml
+*.http
+http-client.env.json
