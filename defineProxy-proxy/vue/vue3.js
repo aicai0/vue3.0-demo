@@ -7,6 +7,7 @@
 // let p2 = new Proxy(obj, basehandler)
 // 原始=>响应式   存放代理后的对象
 let toProxy = new WeakMap();
+
 // 响应式=>原始  存放代理前的对象
 let toRaw = new WeakMap();
 
