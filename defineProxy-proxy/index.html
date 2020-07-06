@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>test</title>
+</head>
+
+<body>
+    <div style="margin-bottom: 40px;">
+        <input type="text" id="value" />
+        <span id="bindValue"></span>
+        <span id="span-click">点击观察者</span>
+    </div>
+    <div id="box" style="margin-left: 20px;">
+       <span id="app"></span> 
+       <span id="add" style="margin-left: 10px;display: inline-block;width: 10px;height: 10px;cursor: pointer;">+</span>
+    </div>
+    <div>
+    </div>
+    <script src="./vue/vue.js"></script>
+    <script>
+        let ele = document.getElementById('app');
+        let btn = document.getElementById('add');
+        let o = {
+            number: 1,
+        }
+        var selfVue = new SelfVue(o , 'number',()=>{ ele.innerHTML = o.number});
+        btn.addEventListener('click', () => {
+            o.number += 1;
+        },false)
+    </script>
+    <script>
+        // javascript中的观察者模式
+        // let spanEle1 = document.getElementById('span-click');
+        // spanEle1.addEventListener('click',function(){
+        //     alert('我是一个观察者，你一点击，我就知道了');
+        // });
+    </script>
+    <script>
+        // object.defineProperty() 实现双向绑定
+        // let inputEle = document.getElementById('value');
+        // let spanEle = document.getElementById('bindValue');
+        // const MessageObj = {};
+        // Object.defineProperty(MessageObj, 'msg', {
+        //     set: function (newVal) {
+        //         inputEle.value = newVal
+        //         spanEle.innerText = newVal
+        //     }
+        // })
+        // // 监听input输入
+        // inputEle.addEventListener('keyup', function (event) {
+        //     MessageObj.msg = event.target.value
+        // })
+        // setTimeout(()=>{
+        //     MessageObj.msg = '数据变化更新视图'
+        // },5000)
+        // -----------------------------分割线
+        // 观察者模式 通俗故事代码
+        // function observer() {
+        //     this.dep = [];
+
+        //     this.register = (fn)=>{
+        //         this.dep.push(fn);
+        //     }
+
+        //     this.notify = ()=>{
+        //         this.dep.forEach(item => item())
+        //     }
+        // }
+
+        // let bankObserver = new observer();
+        // bankObserver.register(() => { console.log("取现金") } );
+        // bankObserver.register(() => { console.log("办卡") } );
+
+        // bankObserver.notify();
+    </script>
+    <script>  // defineProperty 用法
+        // 正常对象添加属性赋值 
+        // let obj1 = {};
+        // obj1.x = 1;
+        // obj1['y'] = 12;
+        // console.log(obj1.x);
+        // console.log(obj1.y);
+        // let property1 = Object.keys(obj1);
+        // console.log(property1)
+        // delete obj1.x;
+        // console.log(obj1.x);
+        // ------------------------分割线
+        // Object.defineProperty 添加属性以及描述符
+        const obj = {};
+
+        // x属性 value不可修改 不可删除  Writable Enumerable 不可修改
+        Object.defineProperty(obj, 'x', {
+            value: 1,
+            // 可否修改  默认false
+            writable: false,
+            // 可否被删除,以及除 value 和 writable 特性外的其他特性是否可以被修改
+            configurable: false,
+            // 可否在for...in循环和Object.keys() 中被枚举
+            enumerable: false,
+        });
+
+        obj.x = 77;
+        // console.log(obj.x);    // 1
+        delete obj.x;
+        // console.log(obj.x);    // 1
+        let property = Object.keys(obj);
+        // console.log(property) //[]
+        // Object.defineProperty(obj, 'x', {configurable: true}) // throw error
+
+        // y属性 value不可修改 Writable Enumerable 可修改
+        Object.defineProperty(obj, 'y', {
+            value: 1,
+            writable: false,
+            configurable: true,
+            enumerable: false,
+        });
+
+        // obj.y = 12;
+        // console.log(obj.y);    // 1
+        Object.defineProperty(obj, 'y', { writable: true });
+        obj.y = 12;
+        // console.log(obj.y);   // 12
+        property = Object.keys(obj);
+        // console.log(property) //[]
+        Object.defineProperty(obj, 'y', { enumerable: true });
+        property = Object.keys(obj);
+        // console.log(property) //[]
+
+        const obj2 = {};
+        let val;
+        Object.defineProperty(obj2, 'x', {
+            get() {
+                console.log('触发get')
+                return val;
+            },
+            set(newValue) {
+                console.log('触发set', newValue)
+                val = newValue;
+            }, 
+        })
+        obj2.x = 12;
+        // console.log(obj2.x)
+    </script>
+    <script>  // proxy用法
+        let target = {};
+        let handler = {
+            get (target, key) {
+               console.info(`Get on property "${key}"`)
+               return target[key]
+            },
+            set (target, key, value){
+                console.info(`Set on property "${key}" new value "${value}"`)
+                target[key] = value;
+            },
+            // 拦截propKey in proxy
+            has ( target, key) {
+                console.log(`is "${key}" in object ?`);
+                if( key === 'a'){
+                    return false;
+                }else{
+                    return key in target;
+                }
+                // return key in target;
+            },
+            deleteProperty(target, key){
+                console.log(`delete key: "${key}"`)
+                if(key === 'a'){
+                    delete target[key];
+                }else{
+                    return target[key];
+                }
+                
+                // return true;
+            },
+            ownKeys (target) {
+                console.log(`key in target`)
+                // (1)  
+                // return Reflect.ownKeys(target);
+                // （2）error 'ownKeys' on proxy: trap result did not include 'd'
+                //  enumerable 的属性必须在数组中返回
+                // return ['b'] 
+                // (3) 
+                return ['b','d']
+            },
+            setPrototypeOf (target, newProto) {
+                console.log(`new prototype set object`);
+                return true
+            },
+            getPrototypeOf (target) {
+                console.log(`prototype get object`);
+                return newProxy;
+                return Object.getPrototypeOf(target)
+                return null
+            },
+             
+            preventExtensions(target) {
+                console.log("called_pre");
+                Object.preventExtensions(target);
+                return true;
+            },
+            isExtensible: function(target) {
+               console.log("called");
+               return Object.isExtensible(target);
+            },
+            
+            getOwnPropertyDescriptor(target, key){
+                if (key === 'b') {
+                    // return;
+                    return Object.getOwnPropertyDescriptor(target, key);
+                }
+                return Object.getOwnPropertyDescriptor(target, key);  
+            },
+
+            defineProperty(target, key, descriptor){
+                console.log(`Object.defineProperty property ${key}`);
+                Object.defineProperty(target, key, descriptor)
+                return true;
+            }
+        }
+        let proxy = new Proxy(target, handler);
+
+        proxy.a = 1;
+        proxy.b = 2;
+        console.log(proxy.a);
+
+        console.log("a" in proxy );
+        console.log("b" in proxy );
+
+        delete proxy.a;
+        console.log(proxy.a);
+        delete proxy.b;
+        console.log(proxy.b);
+
+        proxy.c = 3;
+        Object.defineProperty(proxy,'d',{
+            value:'4',
+            enumerable: false,
+        })
+        // (1) 过滤掉三类属性 
+        //目标对象上不存在的属性 
+        //属性名为 Symbol 值 
+        //不可遍历（enumerable）的属性
+       // console.log(Object.keys(proxy)); // ['b', 'c']
+        //（3） 返回拦截 只返回b
+        console.log(Object.keys(proxy)); // ['b']
+
+        let newProxy = {};
+        Object.setPrototypeOf(proxy,newProxy)
+        console.log(Object.getPrototypeOf(proxy)); // prototype in object // null
+
+        let flag = Object.isExtensible(proxy);// called
+        console.log(flag);
+        flag = Object.preventExtensions(proxy)// called_pre
+        console.log(flag); //Proxy {b: 2, c: 3, d: "4"}
+        flag = Object.isExtensible(proxy);// called
+        console.log(flag);
+
+        console.log("------------");
+
+        console.log(proxy) // Proxy {b: 2, c: 3, d: "4"}
+        flag = Object.getOwnPropertyDescriptor(proxy, 'a');
+        console.log(flag) // undefined
+        flag = Object.getOwnPropertyDescriptor(proxy, 'b');
+        console.log(flag) // {value: 2, writable: true, enumerable: true, configurable: true}
+        flag = Object.getOwnPropertyDescriptor(proxy, 'c');
+        console.log(flag) // {value: 3, writable: true, enumerable: true, configurable: true}
+        
+        console.log("+++++++++++++++");
+        // Object.defineProperty(proxy, 'name', {
+        //     value: 'proxy',
+        // });  // error the non-extensible proxy target 对象不可扩展了 前面代码执行的结果
+        Object.defineProperty(proxy, 'c', {
+            value: 'proxy',
+        });
+        console.log(proxy)
+    </script>
+    <script>
+        let handler1 = {
+            apply (target, thisArg, argumentsList) {
+                console.log(`Calculate sum: ${argumentsList}`);
+                return 'Proxy ok'
+            },
+            construct (target, args, newTarget) {
+                console.log(`args is ${args}`)
+                return new target('修改的小明');
+            }
+        }
+        function sum (a,b){
+            return a+b;
+        }
+        let proxy1 = new Proxy(sum, handler1)
+        console.log(sum(1,2));
+        console.log(proxy1(1,2));
+
+        function person (name) {
+            this.name = name;
+        }
+        let proxy2 = new Proxy(person, handler1)
+        let person1 = new person('小明');
+        console.log(person1); // person {name: "小明"}
+        let person2 = new proxy2('小明');
+        console.log(person2); // person {name: "修改的小明"}
+    </script>
+    <script>
+        var jbj=new Proxy({},{
+            set(target,name,value){
+                console.log(value);
+                obj.name=value;
+            }
+        })
+        jbj.name='jack';
+    </script>
+    <script>
+    const target2 = new Date('2015-01-01');
+    const handler2 = {
+       get(target, prop) {
+            if (prop === 'getDate') {
+                 return target.getDate.bind(target);
+            }
+            return Reflect.get(target, prop);
+       }
+  
+    };
+    const proxy3 = new Proxy(target2, handler2);
+    console.log(proxy3.getDate())
+    </script>
+</body>
+
+</html>

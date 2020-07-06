@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>test2</title>
+</head>
+<body>
+    <div style="margin-bottom: 40px;">
+        <input type="text" id="value" />
+        <span id="bindValue"></span>
+    </div>
+    <div>
+        <div id="box" style="margin-left: 20px;">
+            <span id="app"></span> 
+            <span id="add" style="margin-left: 10px;display: inline-block;width: 10px;height: 10px;cursor: pointer;">+</span>
+         </div>
+    </div>
+    <script src="./vue/vue3.js"></script>
+    <script>
+        let ele = document.getElementById('app');
+        let btn = document.getElementById('add');
+        let o = {
+            number: 1,
+        }
+        let reactiveData = reactive(o);
+        effect(()=>{
+            console.log('数据变了')
+            ele.innerHTML = reactiveData.number
+        })
+        btn.addEventListener('click', () => {
+            reactiveData.number += 1;
+        },false)
+    </script>
+    <script>
+        // object.defineProperty() 实现双向绑定
+        let inputEle = document.getElementById('value');
+        let spanEle = document.getElementById('bindValue');
+        const MessageObj = {};
+        let basehandler = {
+            set(target, key, newVal){
+                target[key] = newVal
+                spanEle.innerText = newVal
+            }
+        }
+        let proxy = new Proxy(MessageObj, basehandler)
+        // 监听input输入
+        inputEle.addEventListener('keyup', function (event) {
+            proxy.msg = event.target.value
+        })
+    </script>
+    <script>
+        var obj = new Proxy({}, {
+            get: function (target, key, receiver) {
+                // console.log(`getting ${key}!`);
+                // 在浏览器console中，get方法会默认打印出值
+                // 如果没有Reflect.get执行默认行为，就无法正确打印出值，而会打印undefined
+                return Reflect.get(target, key, receiver);
+            },
+            set: function (target, key, value, receiver) {
+                // console.log(`setting ${key}!`);
+                return Reflect.set(target, key, value, receiver);
+            }
+        
+        });
+        obj.a = 12;
+        // console.log(obj.a)
+    </script>
+    <script>
+        let obj1 = {
+            a: 1,
+            b: 2,
+        }
+        let proxy1 = new Proxy(obj1, {
+            set (target, key, value){
+                // console.log(`setting ${key}!`);
+                return Reflect.set(target, key, value, receiver);
+            },
+            get (target, key){
+                // console.log(`getting ${key}!`);
+                return Reflect.get(target, key, receiver);
+            }
+        })
+        function observe(data){
+            if(!data || typeof data !== 'object') {
+                return;
+            }
+            // 取出所有属性遍历
+            Object.keys(data).forEach(function(key) {
+                defineReactive(data, key, data[key]);
+            });
+        }
+        function defineReactive(data, key, val){
+            observe(val); // 监听子属性
+            Object.defineProperty(data, key, {
+                enumerable: true, 
+                configurable: true, 
+                get: function() {
+                    // console.log(key + '值获取')
+                    return val;
+                },
+                set: function(newVal) {
+                    // console.log(key + '值设置', val, ' --> ', newVal);
+                    val = newVal;
+                }
+            });
+        }
+        observe(obj1);
+        // console.log(obj1.a);
+        // console.log(obj1.b);
+        obj1.a = 12;
+        // console.log("--------")
+    </script>
+    <script>
+        let arr = [1,2,3];
+        let p = new Proxy(arr, {
+          get(target, key,) {
+            // console.log('获取数组属性',target,key)
+            return target[key];
+          },
+          set(target, key, value) {
+            // console.log('设置数组属性',key,+','+target[key] + ' -->' + value )
+            target[key] = value;
+            return true;
+          }
+        })
+        // console.log(p) // Proxy {0: 1, 1: 2, 2: 3}
+        p.push(4);  
+        // 发生四步骤：（1）获取数组属性 (3) [1, 2, 3] push
+        //           （2）获取数组属性 (3) [1, 2, 3] length
+        //           （3）设置数组属性 3 NaN -->4
+        //           （4）设置数组属性 length NaN -->4
+        // console.log('++') // 设置数组属性 0 NaN -->10
+        p[0] = 10;
+        // console.log('-----------');
+        let arrObj = {
+           b:1,
+        }
+        let bValue = arrObj.b;
+        Object.defineProperty(arrObj, "b", {
+            enumerable: true, 
+            configurable: true, 
+            get: function() {
+                let key = "b"
+                // console.log(key + '值获取', bValue)
+                return bValue;
+            },
+            set: function(newVal) {
+                let key = "b"
+                // console.log(key + '值设置 --> ', newVal);
+                bValue = newVal;
+                return bValue
+            }
+        })
+        // console.log(arrObj.b) // 1
+        arrObj.b = [1,2,3];  // b值设置 -->  (3) [1, 2, 3]
+        arrObj.b.push(4);  // b值获取 (3) [1, 2, 3] 只获取了旧值 设置push没有监听到
+        arrObj.b[0] = 10;  // b值获取 (4) [1, 2, 3, 4]  只获取了旧值 b[0]设置没有监听到
+    </script>
+</body>
+</html>
